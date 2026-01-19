@@ -1,0 +1,284 @@
+local Luna = loadstring(game:HttpGet("https://raw.nebulasoftworks.xyz/luna", true))()
+
+getgenv().Genv = getgenv().Genv or {}
+Genv.SHub = Genv.SHub or {}
+Genv.SHub.Notify = Genv.SHub.Notify or {}
+Genv.SHub.Anti = Genv.SHub.Anti or {}
+Genv.SHub.Toggle = Genv.SHub.Toggle or {}
+Genv.SHub.TaskSignal = Genv.SHub.TaskSignal or {}
+
+local SPlayers = game:GetService("Players")
+local SRunService = game:GetService("RunService")
+local LP = SPlayers.LocalPlayer
+
+while Genv.SHub.Toggle.AutoHelpCP_silent and task.wait(0.05) do
+    local LPC = LP.Character
+    local LPR = LPC and LPC:FindFirstChild("HumanoidRootPart")
+    if not (LPC and LPR) then continue end
+end
+
+
+local Window = Luna:CreateWindow({
+    Name = "Thy3u FTF", -- This Is Title Of Your Window
+    Subtitle = "Flee The Facility Script.", -- A Gray Subtitle next To the main title.
+    LogoID = "82795327169782", -- The Asset ID of your logo. Set to nil if you do not have a logo for Luna to use.
+    LoadingEnabled = true, -- Whether to enable the loading animation. Set to false if you do not want the loading screen or have your own custom one.
+    LoadingTitle = "Loading Thy3u..", -- Header for loading screen
+    LoadingSubtitle = "Wait a second..", -- Subtitle for loading screen
+
+    ConfigSettings = {
+        RootFolder = nil, -- The Root Folder Is Only If You Have A Hub With Multiple Game Scripts and u may remove it. DO NOT ADD A SLASH
+        ConfigFolder = "Big Hub" -- The Name Of The Folder Where Luna Will Store Configs For This Script. DO NOT ADD A SLASH
+    },
+
+    KeySystem = false, -- As Of Beta 6, Luna Has officially Implemented A Key System!
+    KeySettings = {
+        Title = "Luna Example Key",
+        Subtitle = "Key System",
+        Note = "Best Key System Ever! Also, Please Use A HWID Keysystem like Pelican, Luarmor etc. that provide key strings based on your HWID since putting a simple string is very easy to bypass",
+        SaveInRoot = false, -- Enabling will save the key in your RootFolder (YOU MUST HAVE ONE BEFORE ENABLING THIS OPTION)
+        SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+        Key = {"Example Key"}, -- List of keys that will be accepted by the system, please use a system like Pelican or Luarmor that provide key strings based on your HWID since putting a simple string is very easy to bypass
+        SecondAction = {
+            Enabled = true, -- Set to false if you do not want a second action,
+            Type = "Link", -- Link / Discord.
+            Parameter = "" -- If Type is Discord, then put your invite link (DO NOT PUT DISCORD.GG/). Else, put the full link of your key system here.
+        }
+    }
+})
+
+Window:CreateHomeTab({
+    SupportedExecutors = {}, -- A Table Of Executors Your Script Supports. Add strings of the executor names for each executor.
+    DiscordInvite = "1234", -- The Discord Invite Link. Do Not Include discord.gg/ | Only Include the code.
+    Icon = 1, -- By Default, The Icon Is The Home Icon. If You would like to change it to dashboard, replace the interger with 2
+})
+
+local MainTab = Window:CreateTab({
+    Name = "Main",
+    Icon = "star",
+    ImageSource = "Material",
+    ShowTitle = true -- This will determine whether the big header text in the tab will show
+})
+
+local SettingsTab = Window:CreateTab({
+    Name = "Settings",
+    Icon = "settings",
+    ImageSource = "Material",
+    ShowTitle = true -- This will determine whether the big header text in the tab will show
+})
+
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local CoreGui = game:GetService("CoreGui")
+
+local playerESPEnabled = false
+
+local function notify(title, text)
+    StarterGui:SetCore("SendNotification", {
+        Title = title,
+        Text = text,
+        Duration = 3
+    })
+end
+
+local function applyHighlight(player)
+    if player == Players.LocalPlayer then return end
+    local char = player.Character
+    if not char or not char:IsA("Model") then return end
+
+    local existingHighlight = CoreGui:FindFirstChild("ESP_" .. player.Name)
+
+    if playerESPEnabled then
+        if not existingHighlight then
+            local highlight = Instance.new("Highlight")
+            highlight.Name = "ESP_" .. player.Name
+            highlight.Adornee = char
+            highlight.FillColor = Color3.fromRGB(0, 255, 255)
+            highlight.OutlineColor = Color3.new(1, 1, 1)
+            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            highlight.Parent = CoreGui
+        end
+        local humanoid = char:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+            humanoid.NameDisplayDistance = math.huge
+        end
+    else
+        if existingHighlight then existingHighlight:Destroy() end
+        local humanoid = char:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
+            humanoid.NameDisplayDistance = 100 -- default
+        end
+    end
+end
+
+
+local Button = MainTab:CreateButton({
+    Name = "Player Esp",
+    Description = "Esps", -- Creates A Description For Users to know what the button does (looks bad if you use it all the time),
+    Callback = function()
+playerESPEnabled = not playerESPEnabled
+    notify("Player ESP", playerESPEnabled and "Esp Enabled." or "Esp Disabled.")
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        applyHighlight(player)
+    end
+
+    Players.PlayerAdded:Connect(function(player)
+        player.CharacterAdded:Connect(function()
+            if playerESPEnabled then
+                task.wait(1)
+                applyHighlight(player)
+            end
+        end)
+    end)
+    end
+})
+
+local Button = MainTab:CreateButton({
+    Name = "Computer Esp",
+    Description = "Esps", -- Creates A Description For Users to know what the button does (looks bad if you use it all the time),
+    Callback = function()
+computerESPEnabled = not computerESPEnabled
+	notify("Computer Esp", computerESPEnabled and "Esp Enabled." or "Esp Disabled.")
+
+	for _, model in ipairs(Workspace:GetDescendants()) do
+		if model:IsA("Model") and model.Name == "ComputerTable" then
+			local highlight = model:FindFirstChild("ComputerESPHighlight")
+			if computerESPEnabled then
+				if not highlight then
+					local screenColor = Color3.fromRGB(255, 255, 255)
+					for _, part in ipairs(model:GetDescendants()) do
+						if part:IsA("BasePart") and part.Name == "Screen" then
+							screenColor = part.Color
+							break
+						end
+					end
+					local newHighlight = Instance.new("Highlight")
+					newHighlight.Name = "ComputerESPHighlight"
+					newHighlight.Adornee = model
+					newHighlight.FillColor = screenColor
+					newHighlight.OutlineColor = Color3.new(1, 1, 1)
+					newHighlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+					newHighlight.Parent = model
+				end
+			elseif highlight then
+				highlight:Destroy()
+			end
+		end
+	end
+    end
+})
+
+MainTab:CreateDivider()
+
+local Button = MainTab:CreateButton({
+    Name = "Auto Hack",
+    Description = "Just click it while ur hacking duh", -- Creates A Description For Users to know what the button does (looks bad if you use it all the time),
+    Callback = function()
+       _G.AutomaticHackingEnabled = not _G.AutomaticHackingEnabled
+
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Auto Hacking";
+    Text = _G.AutomaticHackingEnabled and "Auto Hacking Enabled." or "Auto Hacking Disabled.";
+    Duration = 3;
+})
+
+while _G.AutomaticHackingEnabled do
+    wait(0.1)
+    local args = {
+        "SetPlayerMinigameResult",
+        true
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvent"):FireServer(unpack(args))
+end
+    end
+})
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+
+local speaker = Players.LocalPlayer
+local thirdPersonEnabled = false
+local cameraLoop = nil
+
+local function notify(title, text)
+	StarterGui:SetCore("SendNotification", {
+		Title = title,
+		Text = text,
+		Duration = 3
+	})
+end
+
+local Button = MainTab:CreateButton({
+    Name = "Third-Person",
+    Description = "When ur beast", -- Creates A Description For Users to know what the button does (looks bad if you use it all the time),
+    Callback = function()
+thirdPersonEnabled = not thirdPersonEnabled
+
+	if thirdPersonEnabled then
+		notify("Third Person", "Enabled.")
+		speaker.CameraMode = Enum.CameraMode.Classic
+		cameraLoop = RunService.RenderStepped:Connect(function()
+			if speaker.CameraMode ~= Enum.CameraMode.Classic then
+				speaker.CameraMode = Enum.CameraMode.Classic
+			end
+		end)
+	else
+		notify("Third Person", "Disabled.")
+		if cameraLoop then
+			cameraLoop:Disconnect()
+			cameraLoop = nil
+		end
+	end
+    end
+})
+
+local function GetCurrentBeastHEvent(needed)
+    for _, p in pairs(SPlayers:GetPlayers()) do
+        if p ~= LP and p.Character then
+            local c = p.Character
+            if c:FindFirstChild "Hammer" then
+                return not needed and c:FindFirstChild("HammerEvent", true) or c
+            end
+        end
+    end
+end
+local function GetCurrentBeastPEvent(needed)
+    for _, p in pairs(SPlayers:GetPlayers()) do
+        if p ~= LP and p.Character then
+            local c = p.Character
+            if c:FindFirstChild "BeastPowers" then
+                return not needed and c:FindFirstChild("PowersEvent", true) or c
+            end
+        end
+    end
+end
+
+local Toggle = MainTab:CreateToggle({
+    Name = "Make Beast Walk Slowly",
+    Description = "Explanatory",
+    CurrentValue = false,
+    Callback = function(Value)
+Genv.SHub.Toggle.Rg_SlowBt = Value
+ while Genv.SHub.Toggle.Rg_SlowBt and task.wait(0.05) do
+    local event = GetCurrentBeastPEvent()
+    if event then event:FireServer("Jumped") end
+ end
+    end
+}, "Toggle") -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+
+local Toggle = MainTab:CreateToggle({
+    Name = "Untie Player",
+    Description = "Make beast untie plauer",
+    CurrentValue = false,
+    Callback = function(Value)
+      Genv.SHub.Toggle.Rg_distieBt = Value
+ while Genv.SHub.Toggle.Rg_distieBt and task.wait(0.05) do
+    local event = GetCurrentBeastHEvent()
+    if event then event:FireServer("HammerClick", true) end
+ end
+    end
+}, "Toggle") -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
