@@ -9,13 +9,8 @@ Genv.SHub.TaskSignal = Genv.SHub.TaskSignal or {}
 
 local SPlayers = game:GetService("Players")
 local SRunService = game:GetService("RunService")
+local SReplicatedStorage = game:GetService("ReplicatedStorage")
 local LP = SPlayers.LocalPlayer
-
-while Genv.SHub.Toggle.AutoHelpCP_silent and task.wait(0.05) do
-    local LPC = LP.Character
-    local LPR = LPC and LPC:FindFirstChild("HumanoidRootPart")
-    if not (LPC and LPR) then continue end
-end
 
 
 local Window = Luna:CreateWindow({
@@ -54,15 +49,29 @@ Window:CreateHomeTab({
 })
 
 local MainTab = Window:CreateTab({
-    Name = "Main",
-    Icon = "star",
+    Name = "InGame",
+    Icon = "kitchen",
     ImageSource = "Material",
     ShowTitle = true -- This will determine whether the big header text in the tab will show
 })
 
-local SettingsTab = Window:CreateTab({
-    Name = "Settings",
-    Icon = "settings",
+local BeastTab = Window:CreateTab({
+    Name = "Beast",
+    Icon = "directions_run",
+    ImageSource = "Material",
+    ShowTitle = true -- This will determine whether the big header text in the tab will show
+})
+
+local TrollTab = Window:CreateTab({
+    Name = "Troll",
+    Icon = "more_horiz",
+    ImageSource = "Material",
+    ShowTitle = true -- This will determine whether the big header text in the tab will show
+})
+
+local LocalTab = Window:CreateTab({
+    Name = "Local Player",
+    Icon = "person",
     ImageSource = "Material",
     ShowTitle = true -- This will determine whether the big header text in the tab will show
 })
@@ -116,7 +125,7 @@ end
 
 local Button = MainTab:CreateButton({
     Name = "Player Esp",
-    Description = "Esps", -- Creates A Description For Users to know what the button does (looks bad if you use it all the time),
+    Description = nil, -- Creates A Description For Users to know what the button does (looks bad if you use it all the time),
     Callback = function()
 playerESPEnabled = not playerESPEnabled
     notify("Player ESP", playerESPEnabled and "Esp Enabled." or "Esp Disabled.")
@@ -138,7 +147,7 @@ playerESPEnabled = not playerESPEnabled
 
 local Button = MainTab:CreateButton({
     Name = "Computer Esp",
-    Description = "Esps", -- Creates A Description For Users to know what the button does (looks bad if you use it all the time),
+    Description = nil, -- Creates A Description For Users to know what the button does (looks bad if you use it all the time),
     Callback = function()
 computerESPEnabled = not computerESPEnabled
 	notify("Computer Esp", computerESPEnabled and "Esp Enabled." or "Esp Disabled.")
@@ -150,7 +159,74 @@ computerESPEnabled = not computerESPEnabled
 				if not highlight then
 					local screenColor = Color3.fromRGB(255, 255, 255)
 					for _, part in ipairs(model:GetDescendants()) do
-						if part:IsA("BasePart") and part.Name == "Screen" then
+						if part:IsA("BasePart") and part.Name == "Part" then
+							screenColor = part.Color
+							break
+						end
+					end
+					local newHighlight = Instance.new("Highlight")
+					newHighlight.Name = "ComputerESPHighlight"
+					newHighlight.Adornee = model
+					newHighlight.FillColor = screenColor
+					newHighlight.OutlineColor = Color3.new(1, 1, 1)
+					newHighlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+					newHighlight.Parent = model
+				end
+			elseif highlight then
+				highlight:Destroy()
+			end
+		end
+	end
+    end
+})
+
+local Button = MainTab:CreateButton({
+    Name = "Exit Door Esp",
+    Description = nil, -- Creates A Description For Users to know what the button does (looks bad if you use it all the time),
+    Callback = function()
+exitESPEnabled = not exitESPEnabled
+	notify("ExitDoor ESP", exitESPEnabled and "Exit Door Enabled" or "Exit Door Disabled")
+
+	for _, model in ipairs(Workspace:GetDescendants()) do
+		if model:IsA("Model") and model.Name == "ExitDoor" then
+			local light = model:FindFirstChild("Light")
+			if light then
+				local highlight = light:FindFirstChild("ExitESPHighlight")
+				if exitESPEnabled then
+					if not highlight then
+						local newHighlight = Instance.new("Highlight")
+						newHighlight.Name = "ExitESPHighlight"
+						newHighlight.Adornee = light
+						newHighlight.FillColor = Color3.new(1, 1, 0)
+						newHighlight.OutlineTransparency = 1
+						newHighlight.FillTransparency = 0.5
+						newHighlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+						newHighlight.Parent = light
+					end
+				elseif highlight then
+					highlight:Destroy()
+				end
+			end
+		end
+	end
+    end
+})
+
+local Button = MainTab:CreateButton({
+    Name = "Freeze Pod Esp",
+    Description = nil, -- Creates A Description For Users to know what the button does (looks bad if you use it all the time),
+    Callback = function()
+computerESPEnabled = not computerESPEnabled
+	notify("FreezePod Esp", computerESPEnabled and "Esp Enabled." or "Esp Disabled.")
+
+	for _, model in ipairs(Workspace:GetDescendants()) do
+		if model:IsA("Model") and model.Name == "FreezePod" then
+			local highlight = model:FindFirstChild("ComputerESPHighlight")
+			if computerESPEnabled then
+				if not highlight then
+					local screenColor = Color3.fromRGB(255, 255, 255)
+					for _, part in ipairs(model:GetDescendants()) do
+						if part:IsA("BasePart") and part.Name == "Part" then
 							screenColor = part.Color
 							break
 						end
@@ -175,7 +251,7 @@ MainTab:CreateDivider()
 
 local Button = MainTab:CreateButton({
     Name = "Auto Hack",
-    Description = "Just click it while ur hacking duh", -- Creates A Description For Users to know what the button does (looks bad if you use it all the time),
+    Description = nil, -- Creates A Description For Users to know what the button does (looks bad if you use it all the time),
     Callback = function()
        _G.AutomaticHackingEnabled = not _G.AutomaticHackingEnabled
 
@@ -212,9 +288,9 @@ local function notify(title, text)
 	})
 end
 
-local Button = MainTab:CreateButton({
+local Button = LocalTab:CreateButton({
     Name = "Third-Person",
-    Description = "When ur beast", -- Creates A Description For Users to know what the button does (looks bad if you use it all the time),
+    Description = "Use when beast.", -- Creates A Description For Users to know what the button does (looks bad if you use it all the time),
     Callback = function()
 thirdPersonEnabled = not thirdPersonEnabled
 
@@ -257,9 +333,9 @@ local function GetCurrentBeastPEvent(needed)
     end
 end
 
-local Toggle = MainTab:CreateToggle({
+local Toggle = TrollTab:CreateToggle({
     Name = "Make Beast Walk Slowly",
-    Description = "Explanatory",
+    Description = "Makes beast walk slow.",
     CurrentValue = false,
     Callback = function(Value)
 Genv.SHub.Toggle.Rg_SlowBt = Value
@@ -270,15 +346,104 @@ Genv.SHub.Toggle.Rg_SlowBt = Value
     end
 }, "Toggle") -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
 
-local Toggle = MainTab:CreateToggle({
+local Toggle = TrollTab:CreateToggle({
     Name = "Untie Player",
-    Description = "Make beast untie plauer",
+    Description = "Makes beast untie player instanly.",
     CurrentValue = false,
     Callback = function(Value)
       Genv.SHub.Toggle.Rg_distieBt = Value
  while Genv.SHub.Toggle.Rg_distieBt and task.wait(0.05) do
     local event = GetCurrentBeastHEvent()
     if event then event:FireServer("HammerClick", true) end
+ end
+    end
+}, "Toggle") -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+
+local Toggle = TrollTab:CreateToggle({
+Name = "Force Beast Ability",
+Description = "Forces Beast's Ability (they cant use it.)",
+CurrentValue = false,
+Callback = function(Value)
+Genv.SHub.Toggle.Rg_AbiliBt = Value
+while Genv.SHub.Toggle.Rg_AbiliBt and task.wait(0.05) do
+local event = GetCurrentBeastPEvent()
+if event then event:FireServer("Input") end
+end
+end
+}, "Toggle") -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+
+local Slider = BeastTab:CreateSlider({
+    Name = "Hit Aura Range",
+    Range = {0, 200}, -- The Minimum And Maximum Values Respectively
+    Increment = 5, -- Basically The Changing Value/Rounding Off
+    CurrentValue = 20, -- The Starting Value
+    Callback = function(Value)
+ Genv.SHub.HitAuraRange=ToNumV(Value)
+    end
+}, "Slider") -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+
+local Toggle = BeastTab:CreateToggle({
+    Name = "Hit Aura",
+    Description = "Hits Very Far Away.",
+    CurrentValue = false,
+    Callback = function(Value)
+ Genv.SHub.Toggle.HitAura = Value
+ while Genv.SHub.Toggle.HitAura and task.wait(0.15) do
+    local LHammerEvent = LPC:FindFirstChild("HammerEvent", true)
+    for _, p in pairs(SPlayers:GetPlayers()) do
+    if p ~= LP and not IsWhilstPlayer(p.Name) then
+    local Stats = p:FindFirstChild("TempPlayerStatsModule")
+    if not Stats then continue end
+    local PisRagdoll, PisCaptured = Stats:FindFirstChild("Ragdoll"), Stats:FindFirstChild("Captured")
+    if not (PisRagdoll and PisCaptured) then continue end
+        if not (PisRagdoll.Value or PisCaptured.Value) and p.Character then
+                local root = GetRootChar(p.Character)
+                if root and LPC and LPR and LHammerEvent then
+                    if (root.Position - LPR.Position).Magnitude <= Genv.SHub.HitAuraRange then
+                    LHammerEvent:FireServer("HammerHit", root)
+                end
+            end
+        end
+     end
+   end
+    end
+}, "Toggle") -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+
+local Slider = BeastTab:CreateSlider({
+    Name = "Auto Tie Range",
+    Range = {0, 200}, -- The Minimum And Maximum Values Respectively
+    Increment = 5, -- Basically The Changing Value/Rounding Off
+    CurrentValue = 20, -- The Starting Value
+    Callback = function(Value)
+Genv.SHub.TiePlayerRange=ToNumV(Value)
+    end
+}, "Slider") -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+
+local Toggle = BeastTab:CreateToggle({
+    Name = "Auto Tie",
+    Description = nil,
+    CurrentValue = false,
+    Callback = function(Value)
+Genv.SHub.Toggle.AutoTie = Value
+ while Genv.SHub.Toggle.AutoTie and task.wait(0.15) do
+    local LHammerEvent = LPC:FindFirstChild("HammerEvent", true)
+    for _, p in pairs(SPlayers:GetPlayers()) do
+    if p ~= LP and not IsWhilstPlayer(p.Name) then
+    local Stats = p:FindFirstChild("TempPlayerStatsModule")
+    if not Stats then continue end
+    local PisRagdoll, PisCaptured = Stats:FindFirstChild("Ragdoll"), Stats:FindFirstChild("Captured")
+    if not (PisRagdoll and PisCaptured) then continue end
+        if (PisRagdoll.Value and not PisCaptured.Value) and p.Character then
+                local root = GetRootChar(p.Character)
+                if root and LPC and LPR and LHammerEvent then
+                    if (root.Position - LPR.Position).Magnitude <= Genv.SHub.TiePlayerRange then
+                    local pos = (c_type("Vector3", root.Position, true) and root.Position) or Vector3.zero
+                    LHammerEvent:FireServer("HammerTieUp", root, pos)
+                end
+            end
+        end
+     end
+   end
  end
     end
 }, "Toggle") -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
